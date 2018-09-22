@@ -24,7 +24,7 @@ wget -O - https://apps.lxsang.me/script/antd | bash -s "wterm"
 The script will ask you where you want to put the binaries (should be an absolute path, otherwise the build will fail) and the default HTTP port for the server config.
 
 ## Run
-To run the Antd server with the **wvnc** plugin:
+To run the Antd server with the **wterm** plugin:
 ```sh
 /path/to/your/build/antd
 ```
