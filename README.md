@@ -33,4 +33,4 @@ Web applications can be put on **/path/to/your/build/htdocs**, the web socket to
 ```
 ws://your_host:your_port/wterm
 ```
-This websocket address can be used with [xterm.js](https://xtermjs.org) to provide web based termnial application
+This websocket address can be used with [xterm.js](https://xtermjs.org) to provide web based termnial access
