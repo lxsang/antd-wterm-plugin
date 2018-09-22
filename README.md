@@ -1,5 +1,5 @@
 # antd-wterm-plugin
-**wterm** is a [antd plugin](https://github.com/lxsang/ant-http) providing the Terminal gateway to the web using websocket.
+**wterm** is an [antd plugin](https://github.com/lxsang/ant-http) providing the Terminal gateway to the web using websocket.
 
 ## Build from source
 As **wterm** is an **Antd's** plugin, it need to be built along with the server. This require the following application/libraries to be pre installed:
