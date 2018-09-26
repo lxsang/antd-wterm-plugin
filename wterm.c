@@ -9,6 +9,10 @@
 #include <string.h>
 #include "plugin.h"
 
+void init()
+{
+	
+}
 void pexit()
 {
 	
