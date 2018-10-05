@@ -99,7 +99,7 @@ void *process(void *data)
 					char *tok = NULL;
 					char *tok1 = NULL;
 					char *orgs = NULL;
-					while ((l = ws_read_data(cl, h, sizeof(buff), buff)) > 0)
+					while ((l = ws_read_data(cl, h, sizeof(buff), (uint8_t*)buff)) > 0)
 					{
 						char c = buff[0];
 						switch (c)
@@ -197,7 +197,6 @@ void *process(void *data)
 void *handle(void *rqdata)
 {
 	antd_request_t *rq = (antd_request_t *)rqdata;
-	ws_msg_header_t *h = NULL;
 	antd_task_t *task = antd_create_task(NULL, (void *)rq, NULL);
 	task->priority++;
 	void *cl = (void *)rq->client;
