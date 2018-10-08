@@ -6,6 +6,7 @@
 #include <termios.h>
 #include <sys/select.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
 #include <string.h>
 #include "plugin.h"
 
@@ -36,7 +37,7 @@ void *process(void *data)
 	int fdm = wterm_data->fdm;
 	pid_t pid = wterm_data->pid;
 	// first we need to verify if child exits
-	// if it is the case then quit the session
+	// if it is the case then quit the session 
 	// and return an empty task
 	pid_t wpid = waitpid(pid, &status, WNOHANG);
 	if(wpid == -1 || wpid > 0)
