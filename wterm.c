@@ -70,7 +70,11 @@ void *process(void *data)
 		free(wterm_data);
 		ws_close(cl, 1011);
 		return task;
-
+	case 0:
+		// time out
+		goto wait_for_child;
+		break;
+	// we have data
 	default:
 	{
 		// If data is on websocket side
