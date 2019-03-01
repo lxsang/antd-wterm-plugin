@@ -19,7 +19,7 @@ When all dependencies are installed, the build can be done with a few single com
 ```bash
 mkdir antd
 cd antd
-wget -O- https://get.makeand.run/antd | bash -s "wterm"
+wget -O- https://get.bitdojo.dev/antd | bash -s "wterm"
 ```
 The script will ask for a place to put the binaries (should be an absolute path, otherwise the build will fail) and the default HTTP port for the server config.
 
