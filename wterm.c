@@ -44,7 +44,7 @@ void *process(void *data)
 	{
 		// child exits
 		LOG("Child process finished\n");
-		task = antd_create_task(NULL, (void *)rq, NULL);
+		task = antd_create_task(NULL, (void *)rq, NULL, time(NULL));
 		task->priority++;
 		//ws_close(cl, 1011);
 		free(wterm_data);
@@ -65,7 +65,7 @@ void *process(void *data)
 	{
 	case -1:
 		LOG("Error %d on select()\n", errno);
-		task = antd_create_task(NULL, (void *)rq, NULL);
+		task = antd_create_task(NULL, (void *)rq, NULL, time(NULL));
 		task->priority++;
 		free(wterm_data);
 		ws_close(cl, 1011);
@@ -87,14 +87,17 @@ void *process(void *data)
 				if (h->mask == 0)
 				{
 					LOG("%s\n", "Data is not mask");
-					write(fdm, "exit\n", 5);
+					// kill the child process
+					kill(pid, SIGKILL);
 					free(h);
+					ws_close(cl, 1011);
 					goto wait_for_child;
 				}
 				if (h->opcode == WS_CLOSE)
 				{
 					LOG("%s\n", "Websocket: connection closed");
-					write(fdm, "exit\n", 5);
+					ws_close(cl, 1011);
+					kill(pid, SIGKILL);
 					free(h);
 					goto wait_for_child;
 				}
@@ -163,7 +166,7 @@ void *process(void *data)
 			}
 			else
 			{
-				write(fdm, "exit\n", 5);
+				kill(pid, SIGKILL);
 				ws_close(cl, 1000);
 			}
 		}
@@ -183,7 +186,7 @@ void *process(void *data)
 				if (rc < 0)
 				{
 					LOG("Error %d on read standard input. Exit now\n", errno);
-					write(fdm, "exit\n", 5);
+					kill(pid, SIGKILL);
 					ws_close(cl, 1011);
 					goto wait_for_child;
 				}
@@ -193,7 +196,7 @@ void *process(void *data)
 	}
 	} // End switch
 	wait_for_child:
-	task = antd_create_task(process, (void *)wterm_data, NULL);
+	task = antd_create_task(process, (void *)wterm_data, NULL, time(NULL));
 	task->priority++;
 	task->type = HEAVY;
 	return task;
@@ -202,7 +205,7 @@ void *process(void *data)
 void *handle(void *rqdata)
 {
 	antd_request_t *rq = (antd_request_t *)rqdata;
-	antd_task_t *task = antd_create_task(NULL, (void *)rq, NULL);
+	antd_task_t *task = antd_create_task(NULL, (void *)rq, NULL, time(NULL));
 	task->priority++;
 	void *cl = (void *)rq->client;
 	if (ws_enable(rq->request))
@@ -246,7 +249,7 @@ void *handle(void *rqdata)
 			wdata->request = rqdata;
 			wdata->fdm = fdm;
 			wdata->pid = pid;
-			task = antd_create_task(process, (void*)wdata ,NULL);
+			task = antd_create_task(process, (void*)wdata ,NULL, time(NULL));
 			task->priority++;
 			task->type = HEAVY;
 			return task;
@@ -291,8 +294,6 @@ void *handle(void *rqdata)
 
 			//system("/bin/bash");
 			system("TERM=linux sudo login");
-			// if Error...
-			ws_close(cl, 1000);
 			//LOG("%s\n","Terminal exit");
 			_exit(1);
 		}
