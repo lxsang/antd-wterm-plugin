@@ -2,16 +2,13 @@
 **wterm** is an [antd plugin](https://github.com/lxsang/ant-http) providing the Terminal gateway to the web using websocket.
 
 ## Build from source
-As **wterm** is an **Antd's** plugin, it need to be built along with the server. This require the following application/libraries to be pre installed:
+As **wterm** is an **Antd's** plugin, the server must be pre-installed
 
 ### build dep
 * git
 * make
 * build-essential
 
-### server dependencies
-* libssl-dev
-* libsqlite3-dev
 
 ### build
 When all dependencies are installed, the build can be done with a few single command lines:
@@ -19,9 +16,17 @@ When all dependencies are installed, the build can be done with a few single com
 ```bash
 mkdir antd
 cd antd
-wget -O- https://get.bitdojo.dev/antd | bash -s "wterm"
+# replace x.x.x by a version number
+wget -O- https://get.bitdojo.dev/antd_plugin | bash -s "wterm-x.x.x"
+
+# or install from a tarball distribution in dist/
+tar xvzf wterm-x.x.x.tar.gz
+cd wterm-x.x.x
+./configure --prefix=/opt/www --enable-debug=yes
+make
+sudo make install
 ```
-The script will ask for a place to put the binaries (should be an absolute path, otherwise the build will fail) and the default HTTP port for the server config.
+
 
 ## Run
 To run the Antd server with the **wterm** plugin:
@@ -34,3 +39,12 @@ Web applications can be put on **/path/to/your/build/htdocs**, the web socket to
 ws://your_host:your_port/wterm
 ```
 This websocket address can be used with [xterm.js](https://xtermjs.org) to provide web based termnial access
+
+### Generate distribution
+```sh
+libtoolize
+aclocal
+autoconf
+automake --add-missing
+make distcheck
+``` 

@@ -8,7 +8,7 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <string.h>
-#include "plugin.h"
+#include <antd/plugin.h>
 
 typedef struct{
 	int fdm;
