@@ -1,3 +1,4 @@
+#define PLUGIN_IMPLEMENT 1
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
