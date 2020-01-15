@@ -13,7 +13,6 @@
 
 typedef struct{
 	int fdm;
-	void* request;
 	pid_t pid;
 } wterm_rq_t;
 
@@ -29,12 +28,21 @@ void *process(void *data)
 	char buff[BUFFLEN];
 	int max_fdm, status;
 	fd_set fd_in;
-	wterm_rq_t* wterm_data = (wterm_rq_t*)data;
-	antd_request_t *rq = (antd_request_t *)wterm_data->request;
+	antd_request_t *rq = (antd_request_t *)data;
+	wterm_rq_t* wterm_data = (wterm_rq_t*)dvalue(rq->request, "WTERM_DATA");
 	ws_msg_header_t *h = NULL;
 	antd_task_t *task = NULL;
 	void *cl = (void *)rq->client;
 	int cl_fd = ((antd_client_t *)cl)->sock;
+
+	task = antd_create_task(NULL, (void *)rq, NULL, time(NULL));
+	task->priority++;
+
+	if(!wterm_data)
+	{
+		return task;
+	}
+
 	int fdm = wterm_data->fdm;
 	pid_t pid = wterm_data->pid;
 	// first we need to verify if child exits
@@ -45,10 +53,6 @@ void *process(void *data)
 	{
 		// child exits
 		LOG("Child process finished\n");
-		task = antd_create_task(NULL, (void *)rq, NULL, time(NULL));
-		task->priority++;
-		//ws_close(cl, 1011);
-		free(wterm_data);
 		return task;
 	}
 	struct timeval timeout;      
@@ -66,9 +70,6 @@ void *process(void *data)
 	{
 	case -1:
 		LOG("Error %d on select()\n", errno);
-		task = antd_create_task(NULL, (void *)rq, NULL, time(NULL));
-		task->priority++;
-		free(wterm_data);
 		ws_close(cl, 1011);
 		return task;
 	case 0:
@@ -197,9 +198,9 @@ void *process(void *data)
 	}
 	} // End switch
 	wait_for_child:
-	task = antd_create_task(process, (void *)wterm_data, NULL, time(NULL));
-	task->priority++;
+	task->handle = process;
 	task->type = HEAVY;
+	task->access_time = time(NULL);
 	return task;
 }
 
@@ -247,10 +248,10 @@ void *handle(void *rqdata)
 		{
 			free(task);
 			wterm_rq_t* wdata = (wterm_rq_t*)malloc(sizeof(*wdata));
-			wdata->request = rqdata;
+			dput(rq->request,"WTERM_DATA", wdata);
 			wdata->fdm = fdm;
 			wdata->pid = pid;
-			task = antd_create_task(process, (void*)wdata ,NULL, time(NULL));
+			task = antd_create_task(process, (void*)rq ,NULL, time(NULL));
 			task->priority++;
 			task->type = HEAVY;
 			return task;
