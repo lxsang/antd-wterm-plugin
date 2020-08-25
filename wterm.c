@@ -10,7 +10,8 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <antd/plugin.h>
-
+#include <antd/ws.h>
+#include <antd/scheduler.h>
 typedef struct{
 	int fdm;
 	pid_t pid;
@@ -115,7 +116,7 @@ void *process(void *data)
 						switch (c)
 						{
 						case 'i': // input from user
-							write(fdm, buff + 1, l - 1);
+							UNUSED(write(fdm, buff + 1, l - 1));
 							break;
 
 						case 's': // terminal resize event
@@ -280,9 +281,9 @@ void *handle(void *rqdata)
 			close(1); // Close standard output (current terminal)
 			close(2); // Close standard error (current terminal)
 
-			dup(fds); // PTY becomes standard input (0)
-			dup(fds); // PTY becomes standard output (1)
-			dup(fds); // PTY becomes standard error (2)
+			UNUSED(dup(fds)); // PTY becomes standard input (0)
+			UNUSED(dup(fds)); // PTY becomes standard output (1)
+			UNUSED(dup(fds)); // PTY becomes standard error (2)
 
 			// Now the original file descriptor is useless
 			close(fds);
@@ -295,7 +296,7 @@ void *handle(void *rqdata)
 			ioctl(0, TIOCSCTTY, 1);
 
 			//system("/bin/bash");
-			system("TERM=linux sudo login");
+			UNUSED(system("TERM=linux sudo login"));
 			//LOG("%s\n","Terminal exit");
 			_exit(1);
 		}
