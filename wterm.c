@@ -12,7 +12,9 @@
 #include <antd/plugin.h>
 #include <antd/ws.h>
 #include <antd/scheduler.h>
-typedef struct{
+#include <antd/utils.h>
+typedef struct
+{
 	int fdm;
 	pid_t pid;
 } wterm_rq_t;
@@ -30,16 +32,15 @@ void *process(void *data)
 	int max_fdm, status;
 	fd_set fd_in;
 	antd_request_t *rq = (antd_request_t *)data;
-	wterm_rq_t* wterm_data = (wterm_rq_t*)dvalue(rq->request, "WTERM_DATA");
+	wterm_rq_t *wterm_data = (wterm_rq_t *)dvalue(rq->request, "WTERM_DATA");
 	ws_msg_header_t *h = NULL;
 	antd_task_t *task = NULL;
 	void *cl = (void *)rq->client;
 	int cl_fd = ((antd_client_t *)cl)->sock;
-
+	int ret;
 	task = antd_create_task(NULL, (void *)rq, NULL, time(NULL));
-	task->priority++;
 
-	if(!wterm_data)
+	if (!wterm_data)
 	{
 		return task;
 	}
@@ -47,16 +48,16 @@ void *process(void *data)
 	int fdm = wterm_data->fdm;
 	pid_t pid = wterm_data->pid;
 	// first we need to verify if child exits
-	// if it is the case then quit the session 
+	// if it is the case then quit the session
 	// and return an empty task
 	pid_t wpid = waitpid(pid, &status, WNOHANG);
-	if(wpid == -1 || wpid > 0)
+	if (wpid == -1 || wpid > 0)
 	{
 		// child exits
 		LOG("Child process finished\n");
 		return task;
 	}
-	struct timeval timeout;      
+	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 500;
 	// otherwise, check if data available
@@ -110,13 +111,14 @@ void *process(void *data)
 					char *tok = NULL;
 					char *tok1 = NULL;
 					char *orgs = NULL;
-					while ((l = ws_read_data(cl, h, sizeof(buff), (uint8_t*)buff)) > 0)
+					while ((l = ws_read_data(cl, h, sizeof(buff), (uint8_t *)buff)) > 0)
 					{
 						char c = buff[0];
 						switch (c)
 						{
 						case 'i': // input from user
-							UNUSED(write(fdm, buff + 1, l - 1));
+							ret = guard_write(fdm, buff + 1, l - 1);
+							UNUSED(ret);
 							break;
 
 						case 's': // terminal resize event
@@ -178,7 +180,7 @@ void *process(void *data)
 		{
 			//LOG("data from server\n");
 			//rc = read(fdm, buff, sizeof(buff));
-			if ((rc = read(fdm, buff, sizeof(buff) - 1)) > 0)
+			if ((rc = guard_read(fdm, buff, sizeof(buff) - 1)) > 0)
 			{
 				// Send data to websocket
 				buff[rc] = '\0';
@@ -198,7 +200,7 @@ void *process(void *data)
 		//printf("DONE\n");
 	}
 	} // End switch
-	wait_for_child:
+wait_for_child:
 	task->handle = process;
 	task->type = HEAVY;
 	task->access_time = time(NULL);
@@ -209,7 +211,6 @@ void *handle(void *rqdata)
 {
 	antd_request_t *rq = (antd_request_t *)rqdata;
 	antd_task_t *task = antd_create_task(NULL, (void *)rq, NULL, time(NULL));
-	task->priority++;
 	void *cl = (void *)rq->client;
 	if (ws_enable(rq->request))
 	{
@@ -248,12 +249,11 @@ void *handle(void *rqdata)
 		if (pid)
 		{
 			free(task);
-			wterm_rq_t* wdata = (wterm_rq_t*)malloc(sizeof(*wdata));
-			dput(rq->request,"WTERM_DATA", wdata);
+			wterm_rq_t *wdata = (wterm_rq_t *)malloc(sizeof(*wdata));
+			dput(rq->request, "WTERM_DATA", wdata);
 			wdata->fdm = fdm;
 			wdata->pid = pid;
-			task = antd_create_task(process, (void*)rq ,NULL, time(NULL));
-			task->priority++;
+			task = antd_create_task(process, (void *)rq, NULL, time(NULL));
 			task->type = HEAVY;
 			return task;
 		}
@@ -281,9 +281,12 @@ void *handle(void *rqdata)
 			close(1); // Close standard output (current terminal)
 			close(2); // Close standard error (current terminal)
 
-			UNUSED(dup(fds)); // PTY becomes standard input (0)
-			UNUSED(dup(fds)); // PTY becomes standard output (1)
-			UNUSED(dup(fds)); // PTY becomes standard error (2)
+			if (dup(fds) == -1)
+				_exit(1); // PTY becomes standard input (0)
+			if (dup(fds) == -1)
+				_exit(1); // PTY becomes standard output (1)
+			if (dup(fds) == -1)
+				_exit(1); // PTY becomes standard error (2)
 
 			// Now the original file descriptor is useless
 			close(fds);
@@ -296,7 +299,10 @@ void *handle(void *rqdata)
 			ioctl(0, TIOCSCTTY, 1);
 
 			//system("/bin/bash");
-			UNUSED(system("TERM=linux sudo login"));
+			if (system("TERM=linux sudo login") == -1)
+			{
+				ERROR("Unable to start terminal session: %s", strerror(errno));
+			}
 			//LOG("%s\n","Terminal exit");
 			_exit(1);
 		}
