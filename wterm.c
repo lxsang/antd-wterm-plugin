@@ -180,7 +180,7 @@ void *process(void *data)
 		{
 			//LOG("data from server\n");
 			//rc = read(fdm, buff, sizeof(buff));
-			if ((rc = guard_read(fdm, buff, sizeof(buff) - 1)) > 0)
+			if ((rc = read(fdm, buff, sizeof(buff) - 1)) > 0)
 			{
 				// Send data to websocket
 				buff[rc] = '\0';
