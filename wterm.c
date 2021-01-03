@@ -202,7 +202,6 @@ void *process(void *data)
 	} // End switch
 wait_for_child:
 	task->handle = process;
-	task->type = HEAVY;
 	task->access_time = time(NULL);
 	return task;
 }
@@ -254,7 +253,6 @@ void *handle(void *rqdata)
 			wdata->fdm = fdm;
 			wdata->pid = pid;
 			task = antd_create_task(process, (void *)rq, NULL, time(NULL));
-			task->type = HEAVY;
 			return task;
 		}
 		else
