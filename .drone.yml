@@ -11,7 +11,7 @@ steps:
 - name: clone
   commands:
   - pwd
-  - git clone git@iohub.dev:2222/lxsang/antd-wterm-plugin.git
+  - git clone ssh://git@iohub.dev:2222/lxsang/antd-wterm-plugin.git
   - cd ./antd-wterm-plugin && git checkout master
 - name: build
   commands:
